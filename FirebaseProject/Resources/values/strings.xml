@@ -1,0 +1,12 @@
+<resources>
+	<string name="desc">Studid!</string>
+	<string name="search_desc">Search_Desc</string>
+	<string name="add_desc">Add_Desc</string>
+	<string name="add_exam">Add your Exam</string>
+	<string name="addexam_nameText">ExamName</string>
+	<string name="addexam_dateText">ExamDate</string>
+	<string name="delete_desc">Delete_Desc</string>
+	<string name="app_name">Studid!</string>
+    <string name="title_exams">Exams</string>
+    <string name="action_settings">Settings</string>	
+</resources>

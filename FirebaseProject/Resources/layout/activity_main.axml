@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+ xmlns:app="http://schemas.android.com/apk/res-auto"
+ xmlns:tools="http://schemas.android.com/tools"   
+ android:layout_width="match_parent"
+ android:layout_height="match_parent"
+ android:orientation="vertical"
+ android:background="#fff"
+ >
+
+ <android.support.v7.widget.Toolbar
+   android:id="@+id/toolbar"
+   android:layout_width="match_parent"
+   android:layout_height="wrap_content"
+   android:background="?android:attr/colorPrimary"
+   android:minHeight="?android:attr/actionBarSize"
+   android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+   android:elevation="4dp">
+
+ <RelativeLayout
+     android:layout_width="match_parent"
+     android:layout_height="wrap_content">
+   
+     <TextView 
+       android:layout_centerVertical="true"
+       android:layout_height="wrap_content"
+       android:layout_width="match_parent"
+       android:gravity="center"             
+       android:text="@string/title_exams"
+       android:textStyle="bold"
+       android:textColor="#fff"
+       android:textSize="30sp"         
+       />
+
+     <ImageView
+      android:contentDescription="@string/search_desc"          
+      android:layout_width="30dp"
+      android:layout_height="50dp"
+      android:id="@+id/addButton"
+      android:layout_alignParentRight="true"
+      android:src="@drawable/add"
+      android:tint="#fff"
+      android:layout_marginRight="10dp"
+      />
+
+      <ImageView
+      android:contentDescription="@string/add_desc"          
+      android:layout_width="30dp"
+      android:layout_height="50dp"
+      android:id="@+id/searchButton"
+      android:layout_alignParentLeft="true"
+      android:src="@drawable/search"
+      android:tint="#fff"
+      android:layout_marginLeft="10dp"
+      />
+ 
+ </RelativeLayout>       
+
+ </android.support.v7.widget.Toolbar>
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:src="@drawable/banner"
+        android:padding="16dp"
+        android:scaleType="fitCenter"
+        android:contentDescription="@strings/desc"
+        android:layout_marginRight="20.6dp"
+        android:layout_marginLeft="27.7dp"
+        android:background="#fff"/>
+      
+       <EditText
+        android:visibility="gone"
+        android:id="@+id/search_text"
+        android:layout_marginLeft="5dp"
+        android:layout_marginRight="5dp"
+        android:layout_marginBottom="5dp"
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:hint="Search"
+        />
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/myRecyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scrollbars="vertical"
+        />    
+
+</LinearLayout>
+
+
