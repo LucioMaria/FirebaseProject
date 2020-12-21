@@ -14,6 +14,7 @@ using Android.Gms.Tasks;
 using Firebase;
 using Java.Lang;
 using Xamarin.Forms;
+using Android.Support.V7.Widget.Helper;
 
 namespace FirebaseProject
 {
@@ -26,11 +27,12 @@ namespace FirebaseProject
         RecyclerView rv;
         ExamAdapter adapter;
         FirebaseFirestore database;
-        
+        public Android.Support.V7.Widget.RecyclerView.ContextClickEventArgs ContextClickEventArgs;
+
 
         List<ExamModel> ExamList = new List<ExamModel>();
-        
-        
+
+
 
 
         AddExamFragment addExamFragment;
@@ -50,10 +52,12 @@ namespace FirebaseProject
             addButton.Click += AddButton_Click;
             database = GetDatabase();
             FetchandListen();
-
             SetupRecyclerView();
-            
+            ItemTouchHelper.Callback callback = new MyItemTouchHelper(database.Collection("exams"));
+            ItemTouchHelper itemTouchHelper = new ItemTouchHelper(callback);
+            itemTouchHelper.AttachToRecyclerView(rv);
         }
+
 
         private void AddButton_Click(object sender, EventArgs e)
         {
@@ -100,7 +104,7 @@ namespace FirebaseProject
         private void SetupRecyclerView()
         {
             rv.SetLayoutManager(new Android.Support.V7.Widget.LinearLayoutManager(rv.Context));
-            adapter = new ExamAdapter(ExamList);
+            adapter = new ExamAdapter(ContextClickEventArgs,rv,ExamList);
             adapter.ItemLongClick += Adapter_ItemLongClick;
             rv.SetAdapter(adapter);
         }

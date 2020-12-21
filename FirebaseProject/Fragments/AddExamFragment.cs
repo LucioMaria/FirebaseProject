@@ -80,7 +80,7 @@ namespace FirebaseProject.Fragments
             HashMap examInfo = new HashMap();
             examInfo.Put("examname", addexamname);
             examInfo.Put("examdate", addexamdate);
-            DocumentReference docRef = GetDatabase().Collection("exams").Document();
+            DocumentReference docRef = GetDatabase().Collection("exams").Document(addexamname);
             docRef.Set(examInfo);
             this.Dismiss();
         }

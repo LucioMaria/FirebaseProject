@@ -12,11 +12,14 @@ using Android.Widget;
 
 namespace FirebaseProject.Models
 {
-    class ExamModel
+    public class ExamModel
     {
         public string Id { get; set; }
         public string examName { get; set; }
         public string examDateText { get; set; }
-        public string examMemorizedText { get; set; }     
+        public string examMemorizedText { get; set; }    
+        public string get_exam_date() { return examDateText; }
+        public string get_exam_name() { return examName; }
+        public string get_exam_id() { return Id; }
     }
 }

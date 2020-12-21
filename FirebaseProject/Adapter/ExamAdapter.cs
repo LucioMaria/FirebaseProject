@@ -5,17 +5,25 @@ using Android.Widget;
 using Android.Support.V7.Widget;
 using FirebaseProject.Models;
 using System.Collections.Generic;
+using Firebase.Firestore;
 
 namespace FirebaseProject.Adapter
 {
-    class ExamAdapter : RecyclerView.Adapter
+    class ExamAdapter : RecyclerView.Adapter 
     {
+        public Android.Support.V7.Widget.RecyclerView.ContextClickEventArgs ContextClickEventArgs;
+        public Android.Support.V7.Widget.RecyclerView recyclerView;
         public event EventHandler<ExamAdapterClickEventArgs> ItemClick;
         public event EventHandler<ExamAdapterClickEventArgs> ItemLongClick;
         List<ExamModel> Items;
+        CollectionReference colRef;
 
-        public ExamAdapter(List<ExamModel>Exams)
+
+
+        public ExamAdapter(Android.Support.V7.Widget.RecyclerView.ContextClickEventArgs ContextClickEventArgs, Android.Support.V7.Widget.RecyclerView recyclerView, List<ExamModel>Exams)
         {
+            this.ContextClickEventArgs = ContextClickEventArgs;
+            this.recyclerView = recyclerView;
             Items = Exams;
         }
 
@@ -38,6 +46,16 @@ namespace FirebaseProject.Adapter
             holder.examNameText.Text = exam.examName;
             holder.examDateText.Text = exam.examDateText;    
             holder.examMemorizedText.Text = exam.examMemorizedText;
+            holder.examNameText.Click += ItemView_Click;
+        }
+
+        private void ItemView_Click(object sender, EventArgs e)
+        {
+            int position = this.recyclerView.GetChildAdapterPosition((View)sender);
+            ExamModel examname_clicked = this.Items[position];
+            string examname = examname_clicked.get_exam_name();
+            DocumentReference docRef = colRef.Document(examname);
+            docRef.Update("examname", "Update");
         }
 
         public override int ItemCount => Items.Count;
@@ -64,7 +82,6 @@ namespace FirebaseProject.Adapter
             examMemorizedText = (TextView)ItemView.FindViewById(Resource.Id.exammemorizedText);
             deleteButton = (ImageView)itemView.FindViewById(Resource.Id.deleteButton);
             checkboxButton = (CheckBox)itemView.FindViewById(Resource.Id.checkbox);
-            
             
             itemView.Click += (sender, e) => clickListener(new ExamAdapterClickEventArgs { View = itemView, Position = AdapterPosition });
             itemView.LongClick += (sender, e) => longClickListener(new ExamAdapterClickEventArgs { View = itemView, Position = AdapterPosition });
