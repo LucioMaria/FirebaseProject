@@ -1,4 +1,5 @@
-﻿using Android.App;
+﻿using Android.Util;
+using Android.App;
 using Android.OS;
 using Android.Support.V7.App;
 using Android.Runtime;
@@ -15,19 +16,28 @@ using Firebase;
 using Java.Lang;
 using Xamarin.Forms;
 using Android.Support.V7.Widget.Helper;
+using Android.Views;
+using Google.Android.Material.AppBar;
+using System.Threading.Tasks;
+using Firebase.Database;
+using System.IO;
+using Plugin.CloudFirestore;
+using Google.Android.Material.TextField;
 
 namespace FirebaseProject
 {
     [Activity(Label = "@string/app_name", Theme = "@style/AppTheme", MainLauncher = true)]
-    public class MainActivity : AppCompatActivity, IOnSuccessListener, IEventListener
+    public class MainActivity : AppCompatActivity
     {
-        ImageView searchButton;
+        private ImageView imageView;
         ImageView addButton;
-        EditText searchText;
         RecyclerView rv;
         ExamAdapter adapter;
-        FirebaseFirestore database;
-        public Android.Support.V7.Widget.RecyclerView.ContextClickEventArgs ContextClickEventArgs;
+        // FirestoreDb database;
+        MaterialToolbar topAppBar;
+        IOnCompleteListener OnCompleteListener;
+
+
 
 
         List<ExamModel> ExamList = new List<ExamModel>();
@@ -43,21 +53,34 @@ namespace FirebaseProject
             Xamarin.Essentials.Platform.Init(this, savedInstanceState);
             // Set our view from the "main" layout resource
             SetContentView(Resource.Layout.activity_main);
+            string path = Path.Combine(Xamarin.Essentials.FileSystem.CacheDirectory, "db.json");
+            System.Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", path);
             Forms.SetFlags("SwipeView_Experimental");
-            rv = (RecyclerView)FindViewById(Resource.Id.myRecyclerView);
-            searchButton = (ImageView)FindViewById(Resource.Id.searchButton);
-            addButton = (ImageView)FindViewById(Resource.Id.addButton);
-            searchText = (EditText)FindViewById(Resource.Id.search_text);
-            searchButton.Click += SearchButton_Click;
+            rv = (RecyclerView)FindViewById(Resource.Id.recicler_view_exams);
+            imageView = (ImageView)FindViewById(Resource.Id.empty_recycler_image);
+            addButton = (ImageView)FindViewById(Resource.Id.add_button_exam);
+            // addButton = (ImageView)FindViewById(Resource.Id.addButton)
+            Android.Support.V7.Widget.Toolbar topAppBar = this.FindViewById<Android.Support.V7.Widget.Toolbar>(Resource.Id.topAppBar);
+            SetSupportActionBar(topAppBar);
+            topAppBar.Click += TopAppBar_Click;
             addButton.Click += AddButton_Click;
-            database = GetDatabase();
+            // database = FirestoreDb.Create("fir-project-16446");
             FetchandListen();
             SetupRecyclerView();
-            ItemTouchHelper.Callback callback = new MyItemTouchHelper(database.Collection("exams"));
+            /* ItemTouchHelper.Callback callback = new MyItemTouchHelper(database.Collection("exams"));
             ItemTouchHelper itemTouchHelper = new ItemTouchHelper(callback);
-            itemTouchHelper.AttachToRecyclerView(rv);
+            itemTouchHelper.AttachToRecyclerView(rv); */
         }
 
+        private void TopAppBar_Click(object sender, EventArgs e)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override bool OnCreateOptionsMenu(IMenu menu)
+        {
+            return base.OnCreateOptionsMenu(menu);
+        }
 
         private void AddButton_Click(object sender, EventArgs e)
         {
@@ -66,109 +89,108 @@ namespace FirebaseProject
             addExamFragment.Show(transaction, "add exam");
         }
 
-        public FirebaseFirestore GetDatabase()
+       /* public FirestoreDb GetDatabase()
         {
-            var app = FirebaseApp.InitializeApp(this);
-            FirebaseFirestore database;
-            if (app == null)
-            {
-                var options = new FirebaseOptions.Builder()
-                .SetProjectId("fir-project-16446")
-                .SetApplicationId("fir-project-16446")
-                .SetApiKey("AIzaSyB4tFXBV6P6AiHCZmsjNNEWlF_9eXncoQg")
-                .SetDatabaseUrl("https://fir-project-16446.firebaseio.com")
-                .SetStorageBucket("fir-project-16446.appspot.com")
-                .Build();
-
-                app = FirebaseApp.InitializeApp(this, options);
-                database = FirebaseFirestore.GetInstance(app);
-            }
-            else
-            {
-                database = FirebaseFirestore.GetInstance(app);
-            }
-            return database;
-        }
-
-        void FetchData()
-        {
-            database.Collection("exams").Get()
-                .AddOnSuccessListener(this);
-        }
+            return FirestoreDb.Create("fir-project-16446");
+        } */
 
         void FetchandListen()
         {
-            database.Collection("exams").AddSnapshotListener(this);
+            /* Google.Cloud.Firestore.CollectionReference exams = database.Collection("exams");
+            // Google.Cloud.Firestore.Query query = database.Collection("exams");
+
+            FirestoreChangeListener listener = exams.Listen(snapshot =>
+            {
+                foreach (Google.Cloud.Firestore.DocumentSnapshot documentSnapshot in snapshot.Documents)
+                {
+                    ExamList.Add(documentSnapshot.ConvertTo<ExamModel>());
+                }
+            }); */
+            CrossCloudFirestore.Current
+                   .Instance
+                   .Collection("exams")
+                   .AddSnapshotListener((snapshot, error) =>
+                   {
+                       if (snapshot != null)
+                       {
+                           foreach (var documentChange in snapshot.DocumentChanges)
+                           {
+                               switch (documentChange.Type)
+                               {
+                                   case DocumentChangeType.Added:
+                                       ExamList.Add(documentChange.Document.ToObject<ExamModel>());
+                                       break;
+                                   case DocumentChangeType.Removed:
+                                       ExamList.Remove(documentChange.Document.ToObject<ExamModel>());
+                                       break;
+                               }
+                           }
+                       }
+                   });
         }
 
         private void SetupRecyclerView()
         {
-            rv.SetLayoutManager(new Android.Support.V7.Widget.LinearLayoutManager(rv.Context));
-            adapter = new ExamAdapter(ContextClickEventArgs,rv,ExamList);
-            adapter.ItemLongClick += Adapter_ItemLongClick;
+            rv.SetLayoutManager(new Android.Support.V7.Widget.LinearLayoutManager(this));
+            adapter = new ExamAdapter(this.ApplicationContext, rv, ExamList);
+            adapter.Exam_NameClick += ExamNameTV_Click;
             rv.SetAdapter(adapter);
         }
 
-        private void Adapter_ItemLongClick(object sender, ExamAdapterClickEventArgs e)
+        private void ExamNameTV_Click(object sender, ExamAdapterClickEventArgs e)
         {
-            string examID = ExamList[e.Position].Id;
-            DocumentReference docRef = database.Collection("exams").Document(examID);
-            docRef.Delete();
-        }
-
-        private void SearchButton_Click(object sender, System.EventArgs e)
-        {
-            if (searchText.Visibility == Android.Views.ViewStates.Gone)
+            ExamModel examname_clicked = this.ExamList[e.Position];
+            string examname = examname_clicked.get_exam_name();
+            Dialog nameDialog = new Dialog(this);
+            nameDialog.SetContentView(Resource.Id.dialog_name_update);
+            EditText editText = (EditText)nameDialog.FindViewById(Resource.Id.dialog_name_editText);
+            editText.Text = examname;
+            /* Non riconosce più android.support.design e quindi ho messo il design che sta in google.design*/
+            TextInputLayout textInputLayout = (TextInputLayout)nameDialog.FindViewById(Resource.Id.dialog_name_input_layout);
+            Android.Widget.Button okButton = (Android.Widget.Button)nameDialog.FindViewById(Resource.Id.name_ok);
+            okButton.Click += async delegate
             {
-                searchText.Visibility = Android.Views.ViewStates.Visible;
-            }
-            else
-            {
-                searchText.ClearFocus();
-                searchText.Visibility = Android.Views.ViewStates.Gone;
-            }
-        }
-
-       
-
-        public void OnEvent(Java.Lang.Object value, FirebaseFirestoreException error)
-        {
-            var snapshot = (QuerySnapshot)value;
-            if (!snapshot.IsEmpty)
-            {
-                var documents = snapshot.Documents;
-                ExamList.Clear();
-                foreach (DocumentSnapshot item in documents)
+                string examNameNew = editText.Text.ToUpper();
+                if (examNameNew.Trim().Equals(""))
                 {
-                    ExamModel exam = new ExamModel();
-                    exam.Id = item.Id;
-                    exam.examName = item.Get("examname").ToString();
-                    exam.examDateText = item.Get("examdate").ToString();
-
-                    ExamList.Add(exam);
+                    textInputLayout.SetErrorTextAppearance(Resource.String.empty_name_field);
+                    textInputLayout.RequestFocus();
                 }
-                if (adapter !=null)
+                else if (examNameNew.Length > 15)
                 {
-                    adapter.NotifyDataSetChanged();
+                    textInputLayout.SetErrorTextAppearance(Resource.String.overflow_name_field);
+                    textInputLayout.RequestFocus();
                 }
-            }
+                else if (IsSameName(examNameNew))
+                {
+                    textInputLayout.SetErrorTextAppearance(Resource.String.used_name);
+                    textInputLayout.RequestFocus();
+                }
+                else
+                { /*
+                         Google.Cloud.Firestore.CollectionReference exams = database.Collection("exams");
+                        Google.Cloud.Firestore.DocumentReference examDoc = exams.Document(examname);
+                        Google.Cloud.Firestore.DocumentSnapshot snapshot = await examDoc.GetSnapshotAsync();
+                        if (snapshot.Exists)
+                        {
+                            await exams.Document(examNameNew).SetAsync(snapshot);
+                            await examDoc.DeleteAsync();
+                        }
+                   */
+                }
+
+                    
+                    bool IsSameName(string examNewName)
+                {
+                    for (int j = 0; j < adapter.ItemCount; j++)
+                    {
+                        if (ExamList[j].examName.Equals(examNewName))
+                            return true;
+                    }
+                    return false;
+                }
+            };
         }
-        public void OnSuccess(Java.Lang.Object result)
-        {
-            var snapshot = (QuerySnapshot)result;
-            if (!snapshot.IsEmpty)
-            {
-                var documents = snapshot.Documents;
-                ExamList.Clear();
-                foreach (DocumentSnapshot item in documents)
-                {
-                    ExamModel exam = new ExamModel();
-                    exam.examName = item.Get("examname").ToString();
-                    exam.examDateText = item.Get("examdate").ToString();
-
-                    ExamList.Add(exam);
-                }
-            }
-        }      
     }
 }
+        

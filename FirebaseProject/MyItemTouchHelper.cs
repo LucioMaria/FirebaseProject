@@ -19,14 +19,14 @@ namespace FirebaseProject
 {
     public class MyItemTouchHelper : ItemTouchHelper.Callback
     {
-        CollectionReference colRef;
+        // Google.Cloud.Firestore.CollectionReference colRef;
         
 
-        public MyItemTouchHelper(CollectionReference colRef)
+        /* public MyItemTouchHelper(Google.Cloud.Firestore.CollectionReference colRef)
         {
             
             this.colRef= colRef;
-        }
+        } */
         public override int GetMovementFlags(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder)
         {
             int dragFlags = ItemTouchHelper.Up | ItemTouchHelper.Down;
@@ -42,9 +42,9 @@ namespace FirebaseProject
         public override void OnSwiped(RecyclerView.ViewHolder viewHolder, int direction)
         {
             var holder = viewHolder as ExamAdapterViewHolder;
-            string examname = holder.examNameText.Text;
-            DocumentReference docRef = colRef.Document(examname);
-            docRef.Delete();
+            string examname = holder.examNameTV.Text;
+            // Google.Cloud.Firestore.DocumentReference docRef = colRef.Document(examname);
+            // docRef.DeleteAsync();
         }
     }
 }
